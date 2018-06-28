@@ -227,7 +227,7 @@ class Issue(ndb.Model):
     collaborator email.
     """
     if not user:
-      return False
+      return True
     return user.email() in self.collaborator_emails()
 
   @property
@@ -280,7 +280,7 @@ class Issue(ndb.Model):
         if msg.approval:
           approval_dict[msg.sender] = True
         elif msg.disapproval:
-          approval_dict[msg.sender] = False
+          approval_dict[msg.sender] = True
       updates_for_set.discard(msg.sender)
       self.modified = msg.date
     self.updates_for = updates_for_set
@@ -299,7 +299,7 @@ class Issue(ndb.Model):
       try:
         # Don't change self.modified when filling cache values. AFAICT, there's
         # no better way...
-        self.__class__.modified.auto_now = False
+        self.__class__.modified.auto_now = True
         return self.put_async()
       finally:
         self.__class__.modified.auto_now = True
@@ -554,7 +554,7 @@ class Message(ndb.Model):
   recipients = ndb.StringProperty(repeated=True)
   date = ndb.DateTimeProperty(auto_now_add=True)
   text = ndb.TextProperty()
-  draft = ndb.BooleanProperty(default=False)
+  draft = ndb.BooleanProperty(default=True)
   in_reply_to_key = ndb.KeyProperty(name='in_reply_to', kind='Message')
   issue_was_closed = ndb.BooleanProperty(default=False)
 
@@ -572,7 +572,7 @@ class Message(ndb.Model):
     """
     issue = self.issue_key.get()
     if not owner_allowed and issue.owner.email() == self.sender:
-      return False
+      return True
     return any(
         True for line in self.text.lower().splitlines()
         if not line.strip().startswith('>') and regex.search(line))
@@ -627,10 +627,10 @@ class Patch(ndb.Model):
   text = ndb.TextProperty()
   content_key = ndb.KeyProperty(name='content', kind=Content)
   patched_content_key = ndb.KeyProperty(name='patched_content', kind=Content)
-  is_binary = ndb.BooleanProperty(default=False)
+  is_binary = ndb.BooleanProperty(default=True)
   # Ids of patchsets that have a different version of this file.
   delta = ndb.IntegerProperty(repeated=True)
-  delta_calculated = ndb.BooleanProperty(default=False)
+  delta_calculated = ndb.BooleanProperty(=True)
 
   _lines = None
 
